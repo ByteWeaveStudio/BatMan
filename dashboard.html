@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - BatMan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  
+  <div class="container-fluid py-4">
+    <!-- Goals Section -->
+    <div class="goals-section">
+      <div class="row g-3">
+        <!-- Yearly Goals Card -->
+        <div class="col-md-4">
+          <div class="card goal-card">
+            <div class="card-header bg-white border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Yearly Goals</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="addGoal('yearly')">+ Add</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="yearly-goals-list"></div>
+              <div class="mt-2">
+                <button class="btn btn-sm btn-link text-decoration-none p-0" onclick="showGoalHistory('yearly')">
+                  View History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quarterly Goals Card -->
+        <div class="col-md-4">
+          <div class="card goal-card">
+            <div class="card-header bg-white border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Quarterly Goals</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="addGoal('quarterly')">+ Add</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="quarterly-goals-list"></div>
+              <div class="mt-2">
+                <button class="btn btn-sm btn-link text-decoration-none p-0" onclick="showGoalHistory('quarterly')">
+                  View History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Monthly Goals Card -->
+        <div class="col-md-4">
+          <div class="card goal-card">
+            <div class="card-header bg-white border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Monthly Goals</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="addGoal('monthly')">+ Add</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="monthly-goals-list"></div>
+              <div class="mt-2">
+                <button class="btn btn-sm btn-link text-decoration-none p-0" onclick="showGoalHistory('monthly')">
+                  View History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Daily Task Tracker Section -->
+    <div class="task-tracker-section">
+      <div class="card">
+        <div class="card-header bg-white border-bottom">
+          <div class="month-controls">
+            <label for="month-selector" class="mb-0 fw-bold">Month:</label>
+            <select id="month-selector" class="form-select" style="width: auto;">
+              <!-- Options will be populated by JS -->
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyTasksFromPreviousMonth()">
+              Copy from Previous Month
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="task-table">
+            <div id="task-table-container">
+              <div class="text-center p-4 text-muted">Loading tasks...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal History Modal -->
+  <div class="modal fade" id="goalHistoryModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="goalHistoryModalTitle">Goal History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="goalHistoryModalBody">
+          <!-- History content will be populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- App Scripts (ES Modules) -->
+  <script type="module">
+    import { requireAuth } from './auth.js';
+    import { initHeader } from './header.js';
+    import { initDashboard } from './dashboard.js';
+    
+    // Initialize app
+    requireAuth().then(() => {
+      initHeader();
+      initDashboard();
+    });
+  </script>
+</body>
+</html>
+

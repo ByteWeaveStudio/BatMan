@@ -1,0 +1,208 @@
+/* Global Styles */
+
+:root {
+  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  font-family: var(--bs-body-font-family);
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+/* Header */
+#app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: white;
+}
+
+/* Goals Section */
+.goals-section {
+  margin-bottom: 2rem;
+}
+
+.goal-card {
+  height: 100%;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.goal-card:hover {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.goal-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.goal-item.completed {
+  opacity: 0.6;
+}
+
+.goal-item.completed .goal-text {
+  text-decoration: line-through;
+}
+
+.goal-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.goal-text {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0;
+}
+
+.goal-text:focus {
+  outline: none;
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+}
+
+.goal-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.goal-item:hover .goal-actions {
+  opacity: 1;
+}
+
+/* Task Tracker */
+.task-tracker-section {
+  margin-top: 2rem;
+}
+
+.month-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.task-table {
+  background: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+}
+
+.task-table table {
+  margin-bottom: 0;
+}
+
+.task-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.task-table td {
+  padding: 0.5rem;
+  text-align: center;
+  border-right: 1px solid #f0f0f0;
+}
+
+.task-table td:last-child {
+  border-right: none;
+}
+
+.task-table .task-name-cell {
+  text-align: left;
+  font-weight: 500;
+  padding-left: 1rem;
+  border-right: 2px solid #dee2e6;
+}
+
+.weekend-column {
+  background-color: #f8f9fa;
+}
+
+.current-day {
+  background-color: #e7f3ff !important;
+}
+
+.task-checkbox {
+  cursor: pointer;
+}
+
+/* Expense Entry */
+.expense-entry-card {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+  padding: 1.5rem;
+}
+
+.expense-list-card {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.expense-table {
+  margin-top: 1rem;
+}
+
+/* Charts */
+.chart-container {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #495057;
+}
+
+/* Utilities */
+.text-muted-subtle {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.btn-sm-icon {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .task-table {
+    overflow-x: auto;
+  }
+  
+  .month-controls {
+    flex-wrap: wrap;
+  }
+}
+
