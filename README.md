@@ -45,28 +45,7 @@ const firebaseConfig = {
 };
 ```
 
-### 3. Database Security Rules
-
-Update your Realtime Database rules to secure user data:
-
-```json
-{
-  "rules": {
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid",
-        "years": {
-          ".read": "$uid === auth.uid",
-          ".write": "$uid === auth.uid"
-        }
-      }
-    }
-  }
-}
-```
-
-### 4. Run the Application
+### 3. Run the Application
 
 1. Serve the files using a local web server (Firebase requires HTTPS or localhost)
    - You can use Python's HTTP server: `python -m http.server 8000`
@@ -76,52 +55,6 @@ Update your Realtime Database rules to secure user data:
 2. Open `login.html` in your browser
 
 3. Register a new account or login
-
-## Project Structure
-
-```
-BatMan/
-├── firebase.js          # Firebase configuration
-├── auth.js              # Authentication utilities
-├── header.js            # Header component with year selector
-├── styles.css           # Global styles
-├── login.html           # Login page
-├── register.html        # Registration page
-├── dashboard.html       # Main dashboard (goals + tasks)
-├── dashboard.js         # Dashboard functionality
-├── analytics.html       # Analytics page
-├── analytics.js         # Analytics functionality
-├── expenses.html        # Expenses page
-├── expenses.js          # Expenses functionality
-└── README.md            # This file
-```
-
-## Database Structure
-
-```
-users/
-  {uid}/
-    years/
-      {year}/
-        goals/
-          yearly/         # Array of yearly goals
-          quarterly/      # Array of quarterly goals
-          monthly/        # Array of monthly goals
-          history/        # Archived goals
-          _metadata/      # Metadata for reset tracking
-        tasks/
-          {year-month}/   # e.g., "2026-01"
-            {taskName}/
-              {dayNumber}: true/false
-        expenses/
-          {expenseId}/
-            name: string
-            amount: number
-            date: string
-            place: string
-            description: string
-            createdAt: timestamp
-```
 
 ## Usage
 
@@ -156,14 +89,6 @@ users/
 - Vanilla JavaScript (ES6+)
 - Firebase 9.23.0 (Auth + Realtime Database)
 - Chart.js 4.4.0
-
-## Browser Support
-
-Modern browsers that support ES6+ features:
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
 
 ## License
 
