@@ -100,6 +100,14 @@ export function getExpensesRef(year = null) {
 }
 
 /**
+ * Get database reference for user's portfolio
+ */
+export function getPortfolioRef(year = null) {
+  const yearRef = getUserYearRef(year);
+  return yearRef ? child(yearRef, 'portfolio') : null;
+}
+
+/**
  * Handle logout
  */
 export async function handleLogout() {

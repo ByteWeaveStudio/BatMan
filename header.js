@@ -33,6 +33,9 @@ export function initHeader() {
             <li class="nav-item">
               <a class="nav-link" href="expenses.html">Expenses</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="portfolio.html">Portfolio</a>
+            </li>
           </ul>
           <div class="d-flex align-items-center gap-3">
             <div class="d-flex align-items-center gap-2">
