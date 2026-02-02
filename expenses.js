@@ -6,12 +6,14 @@ let currentYear = getCurrentYear();
 let expenses = [];
 let expenseChart = null;
 let currentChartType = 'daily';
+let selectedMonth = null;
 
 /**
  * Initialize expenses page
  */
 export function initExpenses() {
   currentYear = getCurrentYear();
+  selectedMonth = getCurrentYearMonthValue();
   
   // Initialize form handlers
   initExpenseForm();
@@ -125,30 +127,21 @@ function loadExpenses() {
  * Update summary cards
  */
 function updateSummary() {
-  if (expenses.length === 0) {
-    document.getElementById('total-spend').textContent = '₹0.00';
-    document.getElementById('avg-per-day').textContent = '₹0.00';
-    document.getElementById('avg-per-month').textContent = '₹0.00';
-    return;
-  }
-  
-  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const totalEl = document.getElementById('total-spend');
+  const avgPerDayEl = document.getElementById('avg-per-day');
+  const avgPerMonthEl = document.getElementById('avg-per-month');
+
+  if (!totalEl || !avgPerDayEl || !avgPerMonthEl) return;
+
+  const scopedExpenses = getScopedExpenses();
+  const total = scopedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   document.getElementById('total-spend').textContent = formatCurrency(total);
   
-  // Calculate average per day (based on date range)
-  const dates = expenses.map(e => new Date(e.date));
-  const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-  const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  const daysDiff = Math.max(1, Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1);
-  const avgPerDay = total / daysDiff;
+  const scope = getSummaryScope();
+  const avgPerDay = total / scope.days;
   document.getElementById('avg-per-day').textContent = formatCurrency(avgPerDay);
   
-  // Calculate average per month
-  const months = new Set(expenses.map(e => {
-    const d = new Date(e.date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  })).size;
-  const avgPerMonth = months > 0 ? total / months : 0;
+  const avgPerMonth = total / scope.months;
   document.getElementById('avg-per-month').textContent = formatCurrency(avgPerMonth);
 }
 
@@ -159,16 +152,12 @@ function renderExpenseList() {
   const tbody = document.getElementById('expense-list-body');
   if (!tbody) return;
   
-  const filterMonth = document.getElementById('expense-month-filter').value;
-  let filteredExpenses = expenses;
-  
-  if (filterMonth !== 'all') {
-    filteredExpenses = expenses.filter(exp => {
-      const expDate = new Date(exp.date);
-      const expYearMonth = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}`;
-      return expYearMonth === filterMonth;
-    });
-  }
+  const filterMonth = selectedMonth || getCurrentYearMonthValue();
+  const filteredExpenses = expenses.filter(exp => {
+    const expDate = new Date(exp.date);
+    const expYearMonth = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}`;
+    return expYearMonth === filterMonth;
+  });
   
   if (filteredExpenses.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No expenses found.</td></tr>';
@@ -283,14 +272,16 @@ export function deleteExpense(expenseId) {
 function initChartToggle() {
   document.getElementById('daily-chart').addEventListener('change', () => {
     currentChartType = 'daily';
-    document.getElementById('chart-title').textContent = 'Daily Expenses - Selected Month';
+    updateChartTitle();
     renderChart();
+    updateSummary();
   });
   
   document.getElementById('monthly-chart').addEventListener('change', () => {
     currentChartType = 'monthly';
-    document.getElementById('chart-title').textContent = 'Monthly Expenses - Year View';
+    updateChartTitle();
     renderChart();
+    updateSummary();
   });
 }
 
@@ -302,11 +293,16 @@ function initMonthFilter() {
   if (!filter) return;
   
   filter.addEventListener('change', () => {
+    selectedMonth = filter.value;
+    updateChartTitle();
     renderExpenseList();
+    renderChart();
+    updateSummary();
   });
   
   // Initial update
   updateMonthFilter();
+  updateChartTitle();
 }
 
 /**
@@ -323,22 +319,26 @@ function updateMonthFilter() {
     const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     yearMonths.add(yearMonth);
   });
+  yearMonths.add(getCurrentYearMonthValue());
   
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
   
   const sortedMonths = Array.from(yearMonths).sort().reverse();
-  const currentValue = filter.value;
+  const currentValue = selectedMonth || filter.value;
   
-  filter.innerHTML = '<option value="all">All Months</option>' +
-    sortedMonths.map(ym => {
-      const [year, month] = ym.split('-');
-      return `<option value="${ym}">${monthNames[parseInt(month) - 1]} ${year}</option>`;
-    }).join('');
+  filter.innerHTML = sortedMonths.map(ym => {
+    const [year, month] = ym.split('-');
+    return `<option value="${ym}">${monthNames[parseInt(month) - 1]} ${year}</option>`;
+  }).join('');
   
-  // Restore previous selection if it still exists
   if (currentValue && Array.from(filter.options).some(opt => opt.value === currentValue)) {
     filter.value = currentValue;
+    selectedMonth = currentValue;
+  } else {
+    const fallback = getCurrentYearMonthValue();
+    filter.value = fallback;
+    selectedMonth = fallback;
   }
 }
 
@@ -369,16 +369,15 @@ function renderChart() {
  * Render daily expense chart (for selected month)
  */
 function renderDailyExpenseChart(ctx) {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = getCurrentYear();
+  const { year, month } = getSelectedYearMonth();
   
   // Filter expenses for current month
   const monthExpenses = expenses.filter(exp => {
     const date = new Date(exp.date);
-    return date.getFullYear() === currentYear && date.getMonth() + 1 === currentMonth;
+    return date.getFullYear() === year && date.getMonth() + 1 === month;
   });
   
-  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const daysInMonth = new Date(year, month, 0).getDate();
   const labels = [];
   const data = [];
   
@@ -493,6 +492,84 @@ function renderMonthlyExpenseChart(ctx) {
  */
 function formatCurrency(amount) {
   return '₹' + amount.toFixed(2);
+}
+
+function getCurrentYearMonthValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getSelectedYearMonth() {
+  const value = selectedMonth || getCurrentYearMonthValue();
+  const [year, month] = value.split('-').map(part => parseInt(part, 10));
+  return { year, month };
+}
+
+function getScopedExpenses() {
+  if (currentChartType === 'daily') {
+    const { year, month } = getSelectedYearMonth();
+    return expenses.filter(exp => {
+      const date = new Date(exp.date);
+      return date.getFullYear() === year && date.getMonth() + 1 === month;
+    });
+  }
+  const scopeYear = getCurrentYear();
+  return expenses.filter(exp => {
+    const date = new Date(exp.date);
+    return date.getFullYear() === scopeYear;
+  });
+}
+
+function getSummaryScope() {
+  if (currentChartType === 'daily') {
+    const { year, month } = getSelectedYearMonth();
+    return {
+      days: Math.max(1, getDaysPassedInMonth(year, month)),
+      months: 1
+    };
+  }
+
+  const scopeYear = getCurrentYear();
+  const now = new Date();
+  const monthsElapsed = now.getFullYear() === scopeYear ? now.getMonth() + 1 : 12;
+  return {
+    days: Math.max(1, getDaysPassedInYear(scopeYear)),
+    months: Math.max(1, monthsElapsed)
+  };
+}
+
+function getDaysPassedInMonth(year, month) {
+  const now = new Date();
+  if (now.getFullYear() === year && now.getMonth() + 1 === month) {
+    return now.getDate();
+  }
+  return new Date(year, month, 0).getDate();
+}
+
+function getDaysPassedInYear(year) {
+  const now = new Date();
+  if (now.getFullYear() === year) {
+    const start = new Date(year, 0, 1);
+    return Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1;
+  }
+  return isLeapYear(year) ? 366 : 365;
+}
+
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function updateChartTitle() {
+  const title = document.getElementById('chart-title');
+  if (!title) return;
+  if (currentChartType === 'daily') {
+    const { year, month } = getSelectedYearMonth();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    title.textContent = `Daily Expenses - ${monthNames[month - 1]} ${year}`;
+    return;
+  }
+  title.textContent = 'Monthly Expenses - Year View';
 }
 
 /**

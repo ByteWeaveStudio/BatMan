@@ -23,32 +23,31 @@
       </div>
     </div>
     
-    <!-- Daily Completion % Chart -->
     <div class="row mb-4">
-      <div class="col-12">
-        <div class="chart-container">
-          <h6 class="chart-title">Daily Completion % - Selected Month</h6>
-          <canvas id="dailyCompletionChart"></canvas>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Monthly Average Completion % Chart -->
-    <div class="row mb-4">
-      <div class="col-12">
+      <!-- Monthly Average Completion % Chart -->
+      <div class="col-12 col-lg-6 mb-3">
         <div class="chart-container">
           <h6 class="chart-title">Monthly Average Completion % - Year View</h6>
           <canvas id="monthlyAverageChart"></canvas>
         </div>
       </div>
-    </div>
-    
-    <!-- Task-wise Completion % Chart -->
-    <div class="row mb-4">
-      <div class="col-12">
+
+      <!-- Task-wise Completion % Chart -->
+      <div class="col-12 col-lg-6 mb-3">
         <div class="chart-container">
           <h6 class="chart-title">Task-wise Completion % - Selected Month</h6>
           <canvas id="taskWiseChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Yearly Completion Heatmap -->
+      <div class="col-12">
+        <div class="chart-container">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h6 class="chart-title mb-0">Yearly Completion Heatmap</h6>
+            <div id="yearlyHeatmapLegend" class="heatmap-legend"></div>
+          </div>
+          <div id="yearlyHeatmap" class="heatmap-root"></div>
         </div>
       </div>
     </div>

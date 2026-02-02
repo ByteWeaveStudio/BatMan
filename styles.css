@@ -178,6 +178,62 @@ body {
   color: #495057;
 }
 
+/* Analytics Heatmap */
+.heatmap-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.heatmap-months {
+  display: grid;
+  align-items: center;
+  column-gap: 3px;
+}
+
+.heatmap-month-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, var(--heatmap-cell-size, 12px));
+  gap: var(--heatmap-cell-gap, 3px);
+  width: 100%;
+}
+
+.heatmap-cell {
+  width: var(--heatmap-cell-size, 12px);
+  height: var(--heatmap-cell-size, 12px);
+  border-radius: 2px;
+  background-color: #e9ecef;
+}
+
+.heatmap-cell.empty {
+  background-color: transparent;
+}
+
+.heatmap-cell.future {
+  background-color: transparent;
+  border: 1px solid #dee2e6;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.heatmap-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
 /* Utilities */
 .text-muted-subtle {
   color: #6c757d;

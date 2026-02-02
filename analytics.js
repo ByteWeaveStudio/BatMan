@@ -47,106 +47,172 @@ function initMonthSelector() {
  * Load analytics data from Firebase
  */
 function loadAnalyticsData() {
-  // Load daily completion data for selected month
-  loadDailyCompletionData();
-  
   // Load monthly average data for the year
   loadMonthlyAverageData();
+
+  // Load yearly completion heatmap
+  loadYearlyCompletionHeatmap();
   
   // Load task-wise completion data for selected month
   loadTaskWiseCompletionData();
 }
 
 /**
- * Load daily completion percentage for selected month
+ * Load daily completion percentage for the entire year
  */
-function loadDailyCompletionData() {
-  const yearMonth = getYearMonth(currentYear, currentMonth);
+function loadYearlyCompletionHeatmap() {
   const tasksRef = getTasksRef();
   if (!tasksRef) return;
-  
-  get(child(tasksRef, yearMonth)).then((snapshot) => {
-    const tasksData = snapshot.val() || {};
-    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-    
-    // Calculate completion per day
-    const dailyData = [];
-    const labels = [];
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      labels.push(`Day ${day}`);
-      
+
+  const completionByDate = {};
+  let monthsLoaded = 0;
+  const totalMonths = 12;
+
+  for (let month = 1; month <= totalMonths; month++) {
+    const yearMonth = getYearMonth(currentYear, month);
+
+    get(child(tasksRef, yearMonth)).then((snapshot) => {
+      const tasksData = snapshot.val() || {};
+      const daysInMonth = new Date(currentYear, month, 0).getDate();
       const taskNames = Object.keys(tasksData);
-      if (taskNames.length === 0) {
-        dailyData.push(0);
-        continue;
-      }
-      
-      let completedCount = 0;
-      taskNames.forEach(taskName => {
-        const taskDays = tasksData[taskName] || {};
-        if (taskDays[day] === true) {
-          completedCount++;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        let percentage = 0;
+
+        if (taskNames.length > 0) {
+          let completedCount = 0;
+          taskNames.forEach(taskName => {
+            const taskDays = tasksData[taskName] || {};
+            if (taskDays[day] === true) {
+              completedCount++;
+            }
+          });
+          percentage = (completedCount / taskNames.length) * 100;
         }
-      });
-      
-      const percentage = taskNames.length > 0 
-        ? (completedCount / taskNames.length) * 100 
-        : 0;
-      dailyData.push(percentage);
-    }
-    
-    renderDailyChart(labels, dailyData);
-  });
+
+        completionByDate[getDateKey(currentYear, month, day)] = percentage;
+      }
+
+      monthsLoaded++;
+      if (monthsLoaded === totalMonths) {
+        renderYearlyHeatmap(currentYear, completionByDate);
+      }
+    });
+  }
 }
 
-/**
- * Render daily completion chart
- */
-function renderDailyChart(labels, data) {
-  const ctx = document.getElementById('dailyCompletionChart');
-  if (!ctx) return;
-  
-  if (dailyChart) {
-    dailyChart.destroy();
-  }
-  
-  dailyChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Completion %',
-        data: data,
-        borderColor: '#495057',
-        backgroundColor: 'rgba(73, 80, 87, 0.1)',
-        borderWidth: 1,
-        fill: true,
-        tension: 0.1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          ticks: {
-            callback: function(value) {
-              return value + '%';
-            }
-          }
-        }
-      },
-      animation: false
-    }
+function getDateKey(year, month, day) {
+  const monthStr = String(month).padStart(2, '0');
+  const dayStr = String(day).padStart(2, '0');
+  return `${year}-${monthStr}-${dayStr}`;
+}
+
+function getCompletionColor(percentage) {
+  const clamped = Math.max(0, Math.min(100, percentage));
+  const hue = clamped <= 50
+    ? (clamped / 50) * 60
+    : 60 + ((clamped - 50) / 50) * 60;
+
+  const lightness = 55 - (clamped / 100) * 25;
+
+  return `hsl(${hue}, 75%, ${lightness}%)`;
+}
+
+function renderHeatmapLegend(container) {
+  container.innerHTML = '';
+
+  const lowLabel = document.createElement('span');
+  lowLabel.textContent = 'Low';
+  container.appendChild(lowLabel);
+
+  [0, 25, 50, 75, 100].forEach(value => {
+    const swatch = document.createElement('span');
+    swatch.className = 'heatmap-legend-swatch';
+    swatch.style.backgroundColor = getCompletionColor(value);
+    swatch.title = `${value}%`;
+    container.appendChild(swatch);
   });
+
+  const highLabel = document.createElement('span');
+  highLabel.textContent = 'High';
+  container.appendChild(highLabel);
+}
+
+function renderYearlyHeatmap(year, completionByDate) {
+  const container = document.getElementById('yearlyHeatmap');
+  if (!container) return;
+
+  const legendContainer = document.getElementById('yearlyHeatmapLegend');
+  if (legendContainer) {
+    renderHeatmapLegend(legendContainer);
+  }
+
+  container.innerHTML = '';
+
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+  const totalDays = Math.floor((endDate - startDate) / 86400000) + 1;
+  const startOffset = (startDate.getDay() + 6) % 7;
+  const totalCells = startOffset + totalDays;
+  const weeksCount = Math.ceil(totalCells / 7);
+  const today = new Date();
+  const isCurrentYear = today.getFullYear() === year;
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthsRow = document.createElement('div');
+  monthsRow.className = 'heatmap-months';
+  monthsRow.style.gridTemplateColumns = `repeat(${weeksCount}, 1fr)`;
+
+  for (let month = 0; month < 12; month++) {
+    const firstOfMonth = new Date(year, month, 1);
+    const dayOfYear = Math.floor((firstOfMonth - startDate) / 86400000);
+    const weekIndex = Math.floor((startOffset + dayOfYear) / 7);
+
+    const label = document.createElement('span');
+    label.className = 'heatmap-month-label';
+    label.style.gridColumn = `${weekIndex + 1}`;
+    label.textContent = monthNames[month];
+    monthsRow.appendChild(label);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'heatmap-grid';
+  grid.style.gridTemplateColumns = `repeat(${weeksCount}, 1fr)`;
+
+  const gap = 3;
+  const availableWidth = container.clientWidth || 0;
+  const tentativeSize = (availableWidth - gap * (weeksCount - 1)) / weeksCount;
+  const cellSize = Math.max(10, Math.min(20, Math.floor(tentativeSize)));
+  grid.style.setProperty('--heatmap-cell-size', `${cellSize}px`);
+  grid.style.setProperty('--heatmap-cell-gap', `${gap}px`);
+
+  for (let i = 0; i < startOffset; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'heatmap-cell empty';
+    grid.appendChild(emptyCell);
+  }
+
+  const currentDate = new Date(year, 0, 1);
+  for (let dayIndex = 0; dayIndex < totalDays; dayIndex++) {
+    const dateKey = getDateKey(year, currentDate.getMonth() + 1, currentDate.getDate());
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+
+    if (isCurrentYear && currentDate > today) {
+      cell.classList.add('future');
+      cell.title = `${dateKey}: future`;
+    } else {
+      const percentage = completionByDate[dateKey] ?? 0;
+      cell.style.backgroundColor = getCompletionColor(percentage);
+      cell.title = `${dateKey}: ${Math.round(percentage)}%`;
+    }
+    grid.appendChild(cell);
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  container.appendChild(monthsRow);
+  container.appendChild(grid);
 }
 
 /**
