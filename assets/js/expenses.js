@@ -1,12 +1,29 @@
 // Expenses page functionality (Modular Firebase v9+)
-import { getCurrentYear, getExpensesRef } from './auth.js';
+import { getCurrentYear, getExpensesRef, getExpenseCategoriesRef } from './auth.js';
 import { child, get, set, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
 let currentYear = getCurrentYear();
 let expenses = [];
+let categories = [];
 let expenseChart = null;
+let categoryChart = null;
 let currentChartType = 'daily';
 let selectedMonth = null;
+let selectedExpenseListCategory = 'all';
+let expenseListSearchQuery = '';
+
+const PASTEL_COLORS = [
+  '#FADADD',
+  '#FFF1B8',
+  '#D9F7BE',
+  '#CFFAFE',
+  '#E9D5FF',
+  '#FDE2E4',
+  '#D6EADF',
+  '#E3F2FD',
+  '#FFE5B4',
+  '#F5E6CA'
+];
 
 /**
  * Initialize expenses page
@@ -15,6 +32,9 @@ export function initExpenses() {
   currentYear = getCurrentYear();
   selectedMonth = getCurrentYearMonthValue();
   
+  // Initialize category manager
+  initCategoryManager();
+
   // Initialize form handlers
   initExpenseForm();
   
@@ -23,9 +43,21 @@ export function initExpenses() {
   
   // Initialize month filter
   initMonthFilter();
+
+  // Initialize expense list filters
+  initExpenseListFilters();
   
   // Load expenses
-  loadExpenses();
+  loadInitialData();
+}
+
+/**
+ * Load categories and expenses
+ */
+function loadInitialData() {
+  loadCategories().then(() => {
+    loadExpenses();
+  });
 }
 
 /**
@@ -53,16 +85,49 @@ function initExpenseForm() {
 }
 
 /**
+ * Initialize category form
+ */
+function initCategoryManager() {
+  const form = document.getElementById('category-form');
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addCategory();
+  });
+}
+
+function initExpenseListFilters() {
+  const categoryFilter = document.getElementById('expense-list-category-filter');
+  const searchInput = document.getElementById('expense-list-search');
+
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', () => {
+      selectedExpenseListCategory = categoryFilter.value;
+      renderExpenseList();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      expenseListSearchQuery = searchInput.value.trim().toLowerCase();
+      renderExpenseList();
+    });
+  }
+}
+
+/**
  * Add new expense
  */
 function addExpense() {
   const name = document.getElementById('expense-name').value.trim();
   const amount = parseFloat(document.getElementById('expense-amount').value);
   const date = document.getElementById('expense-date').value;
+  const categoryId = document.getElementById('expense-category').value;
   const place = document.getElementById('expense-place').value.trim();
   const description = document.getElementById('expense-description').value.trim();
   
-  if (!name || isNaN(amount) || amount <= 0) {
+  if (!name || isNaN(amount) || amount <= 0 || !categoryId) {
     alert('Please fill in required fields correctly.');
     return;
   }
@@ -75,6 +140,7 @@ function addExpense() {
     name: name,
     amount: amount,
     date: date,
+    categoryId: categoryId,
     place: place,
     description: description,
     createdAt: Date.now()
@@ -84,6 +150,7 @@ function addExpense() {
     // Clear form
     document.getElementById('expense-form').reset();
     document.getElementById('expense-date').valueAsDate = new Date();
+    document.getElementById('expense-category').value = '';
     document.getElementById('expense-name').focus();
     
     // Reload expenses
@@ -120,6 +187,106 @@ function loadExpenses() {
     updateMonthFilter();
     renderExpenseList();
     renderChart();
+    renderCategoryChart();
+  });
+}
+
+/**
+ * Load categories from Firebase
+ */
+function loadCategories() {
+  const categoriesRef = getExpenseCategoriesRef();
+  if (!categoriesRef) return Promise.resolve();
+
+  return get(categoriesRef).then((snapshot) => {
+    const categoriesData = snapshot.val() || {};
+    categories = Object.keys(categoriesData).map(id => ({
+      id: id,
+      ...categoriesData[id]
+    })).sort((a, b) => a.name.localeCompare(b.name));
+
+    renderCategoryOptions();
+    renderCategoryList();
+  }).catch(() => {
+    categories = [];
+    renderCategoryOptions();
+    renderCategoryList();
+  });
+}
+
+/**
+ * Add a new category
+ */
+function addCategory() {
+  const input = document.getElementById('category-name');
+  const rawName = input.value.trim();
+  const normalized = rawName.toLowerCase();
+
+  if (!rawName) {
+    return;
+  }
+
+  const alreadyExists = categories.some(category => category.name.toLowerCase() === normalized);
+  if (alreadyExists) {
+    alert('Category already exists.');
+    return;
+  }
+
+  if (categories.length >= 10) {
+    alert('You can add up to 10 categories.');
+    return;
+  }
+
+  const categoriesRef = getExpenseCategoriesRef();
+  if (!categoriesRef) return;
+
+  const availableColors = PASTEL_COLORS.filter(color =>
+    !categories.some(category => category.color === color)
+  );
+  const fallbackColor = getRandomPastelColors(1)[0];
+  const color = availableColors.length > 0
+    ? availableColors[Math.floor(Math.random() * availableColors.length)]
+    : fallbackColor;
+
+  const id = Date.now().toString();
+  const category = {
+    name: rawName,
+    color: color,
+    createdAt: Date.now()
+  };
+
+  set(child(categoriesRef, id), category).then(() => {
+    input.value = '';
+    return loadCategories();
+  }).then(() => {
+    renderExpenseList();
+  }).catch(() => {
+    alert('Error adding category. Please try again.');
+  });
+}
+
+/**
+ * Delete category if not used in expenses
+ */
+function deleteCategory(categoryId) {
+  const hasExpenses = expenses.some(expense => expense.categoryId === categoryId);
+  if (hasExpenses) {
+    alert('This category is in use by existing expenses and cannot be deleted.');
+    return;
+  }
+
+  if (!confirm('Delete this category?')) return;
+
+  const categoriesRef = getExpenseCategoriesRef();
+  if (!categoriesRef) return;
+
+  remove(child(categoriesRef, categoryId)).then(() => {
+    return loadCategories();
+  }).then(() => {
+    renderExpenseList();
+    renderCategoryChart();
+  }).catch(() => {
+    alert('Error deleting category. Please try again.');
   });
 }
 
@@ -150,17 +317,46 @@ function updateSummary() {
  */
 function renderExpenseList() {
   const tbody = document.getElementById('expense-list-body');
+  const totalEl = document.getElementById('expense-list-total');
   if (!tbody) return;
   
   const filterMonth = selectedMonth || getCurrentYearMonthValue();
-  const filteredExpenses = expenses.filter(exp => {
+  const monthFilteredExpenses = expenses.filter(exp => {
     const expDate = new Date(exp.date);
     const expYearMonth = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}`;
     return expYearMonth === filterMonth;
   });
+
+  const filteredExpenses = monthFilteredExpenses.filter((expense) => {
+    const categoryMatch = selectedExpenseListCategory === 'all' || expense.categoryId === selectedExpenseListCategory;
+    if (!categoryMatch) {
+      return false;
+    }
+
+    if (!expenseListSearchQuery) {
+      return true;
+    }
+
+    const categoryName = getCategoryName(expense.categoryId);
+    const searchable = [
+      expense.name || '',
+      expense.place || '',
+      expense.description || '',
+      categoryName,
+      formatCurrency(expense.amount),
+      expense.date || ''
+    ].join(' ').toLowerCase();
+
+    return searchable.includes(expenseListSearchQuery);
+  });
+
+  const filteredTotal = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  if (totalEl) {
+    totalEl.textContent = formatCurrency(filteredTotal);
+  }
   
   if (filteredExpenses.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No expenses found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No expenses found.</td></tr>';
     return;
   }
   
@@ -172,6 +368,7 @@ function renderExpenseList() {
       <tr>
         <td>${formattedDate}</td>
         <td>${escapeHtml(expense.name)}</td>
+        <td>${renderCategoryBadge(expense.categoryId)}</td>
         <td class="fw-bold">${formatCurrency(expense.amount)}</td>
         <td>${escapeHtml(expense.place || '-')}</td>
         <td class="text-muted small">${escapeHtml(expense.description || '-')}</td>
@@ -199,6 +396,7 @@ export function editExpense(expenseId) {
   document.getElementById('edit-expense-name').value = expense.name;
   document.getElementById('edit-expense-amount').value = expense.amount;
   document.getElementById('edit-expense-date').value = expense.date;
+  document.getElementById('edit-expense-category').value = expense.categoryId || '';
   document.getElementById('edit-expense-place').value = expense.place || '';
   document.getElementById('edit-expense-description').value = expense.description || '';
   
@@ -220,10 +418,11 @@ function saveExpenseEdit(expenseId) {
   const name = document.getElementById('edit-expense-name').value.trim();
   const amount = parseFloat(document.getElementById('edit-expense-amount').value);
   const date = document.getElementById('edit-expense-date').value;
+  const categoryId = document.getElementById('edit-expense-category').value;
   const place = document.getElementById('edit-expense-place').value.trim();
   const description = document.getElementById('edit-expense-description').value.trim();
   
-  if (!name || isNaN(amount) || amount <= 0) {
+  if (!name || isNaN(amount) || amount <= 0 || !categoryId) {
     alert('Please fill in required fields correctly.');
     return;
   }
@@ -235,6 +434,7 @@ function saveExpenseEdit(expenseId) {
     name: name,
     amount: amount,
     date: date,
+    categoryId: categoryId,
     place: place,
     description: description,
     createdAt: expenses.find(e => e.id === expenseId).createdAt,
@@ -274,6 +474,7 @@ function initChartToggle() {
     currentChartType = 'daily';
     updateChartTitle();
     renderChart();
+    renderCategoryChart();
     updateSummary();
   });
   
@@ -281,6 +482,7 @@ function initChartToggle() {
     currentChartType = 'monthly';
     updateChartTitle();
     renderChart();
+    renderCategoryChart();
     updateSummary();
   });
 }
@@ -297,6 +499,7 @@ function initMonthFilter() {
     updateChartTitle();
     renderExpenseList();
     renderChart();
+    renderCategoryChart();
     updateSummary();
   });
   
@@ -363,6 +566,75 @@ function renderChart() {
   } else {
     renderMonthlyExpenseChart(ctx);
   }
+}
+
+/**
+ * Render category split pie chart for current scope
+ */
+function renderCategoryChart() {
+  const ctx = document.getElementById('category-chart');
+  const emptyState = document.getElementById('category-chart-empty');
+  if (!ctx || !emptyState) return;
+
+  if (categoryChart) {
+    categoryChart.destroy();
+  }
+
+  const scopedExpenses = getScopedExpenses();
+  const categoryTotals = {};
+  scopedExpenses.forEach(exp => {
+    const key = exp.categoryId || 'uncategorized';
+    categoryTotals[key] = (categoryTotals[key] || 0) + exp.amount;
+  });
+
+  const entries = Object.entries(categoryTotals).filter(([, amount]) => amount > 0);
+  if (entries.length === 0) {
+    ctx.classList.add('d-none');
+    emptyState.classList.remove('d-none');
+    return;
+  }
+
+  const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+  const labels = entries.map(([categoryId, amount]) => {
+    const percent = ((amount / total) * 100).toFixed(1);
+    return `${getCategoryName(categoryId)} (${percent}%)`;
+  });
+  const data = entries.map(([, amount]) => amount);
+  const colors = entries.map(([categoryId]) => getCategoryColor(categoryId));
+
+  ctx.classList.remove('d-none');
+  emptyState.classList.add('d-none');
+
+  categoryChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderColor: '#ffffff',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw || 0;
+              return `${context.label}: ${formatCurrency(value)}`;
+            }
+          }
+        }
+      },
+      animation: false
+    }
+  });
 }
 
 /**
@@ -581,6 +853,95 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function getRandomPastelColors(count) {
+  const colorPool = [...PASTEL_COLORS];
+  const chosen = [];
+
+  while (chosen.length < count) {
+    if (colorPool.length === 0) {
+      chosen.push(PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)]);
+      continue;
+    }
+    const randomIndex = Math.floor(Math.random() * colorPool.length);
+    chosen.push(colorPool.splice(randomIndex, 1)[0]);
+  }
+
+  return chosen;
+}
+
+function renderCategoryOptions() {
+  const addSelect = document.getElementById('expense-category');
+  const editSelect = document.getElementById('edit-expense-category');
+  const listFilterSelect = document.getElementById('expense-list-category-filter');
+  if (!addSelect || !editSelect) return;
+
+  const options = categories.map(category => (
+    `<option value="${category.id}">${escapeHtml(category.name)}</option>`
+  )).join('');
+
+  addSelect.innerHTML = '<option value="" selected disabled>Select category</option>' + options;
+  editSelect.innerHTML = '<option value="" selected disabled>Select category</option>' + options;
+
+  if (listFilterSelect) {
+    listFilterSelect.innerHTML = '<option value="all">All categories</option>' + options;
+    const selectedOptionExists = Array.from(listFilterSelect.options).some(
+      option => option.value === selectedExpenseListCategory
+    );
+    listFilterSelect.value = selectedOptionExists ? selectedExpenseListCategory : 'all';
+    selectedExpenseListCategory = listFilterSelect.value;
+  }
+}
+
+function renderCategoryList() {
+  const categoryList = document.getElementById('category-list');
+  if (!categoryList) return;
+
+  if (categories.length === 0) {
+    categoryList.innerHTML = '<span class="text-muted small">No categories yet.</span>';
+    return;
+  }
+
+  categoryList.innerHTML = categories.map(category => `
+    <span class="badge rounded-pill d-inline-flex align-items-center gap-2 text-dark"
+      style="background-color: ${category.color}; border: 1px solid rgba(0, 0, 0, 0.08);">
+      ${escapeHtml(category.name)}
+      <button class="btn btn-sm p-0 border-0 text-dark" onclick="window.deleteCategory('${category.id}')" title="Delete category" type="button" style="line-height:1;">
+        &times;
+      </button>
+    </span>
+  `).join('');
+}
+
+function renderCategoryBadge(categoryId) {
+  const category = categories.find(item => item.id === categoryId);
+  if (!category) {
+    return '<span class="badge text-bg-light">Uncategorized</span>';
+  }
+  return `
+    <span class="badge rounded-pill text-dark"
+      style="background-color: ${category.color}; border: 1px solid rgba(0, 0, 0, 0.08);">
+      ${escapeHtml(category.name)}
+    </span>
+  `;
+}
+
+function getCategoryName(categoryId) {
+  if (categoryId === 'uncategorized') {
+    return 'Uncategorized';
+  }
+  const category = categories.find(item => item.id === categoryId);
+  return category ? category.name : 'Uncategorized';
+}
+
+function getCategoryColor(categoryId) {
+  if (categoryId === 'uncategorized') {
+    return '#E2E8F0';
+  }
+  const category = categories.find(item => item.id === categoryId);
+  return category ? category.color : '#E2E8F0';
+}
+
 // Make functions available globally for onclick handlers
 window.editExpense = editExpense;
 window.deleteExpense = deleteExpense;
+window.deleteCategory = deleteCategory;

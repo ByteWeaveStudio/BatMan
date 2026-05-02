@@ -100,6 +100,14 @@ export function getExpensesRef(year = null) {
 }
 
 /**
+ * Get database reference for user's expense categories
+ */
+export function getExpenseCategoriesRef(year = null) {
+  const yearRef = getUserYearRef(year);
+  return yearRef ? child(yearRef, 'expenseCategories') : null;
+}
+
+/**
  * Get database reference for user's portfolio
  */
 export function getPortfolioRef(year = null) {

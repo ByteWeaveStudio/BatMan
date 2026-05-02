@@ -32,6 +32,13 @@
               <label for="expense-date" class="form-label">Date</label>
               <input type="date" class="form-control" id="expense-date" required>
             </div>
+
+            <div class="mb-3">
+              <label for="expense-category" class="form-label">Category <span class="text-danger">*</span></label>
+              <select class="form-select" id="expense-category" required>
+                <option value="" selected disabled>Select category</option>
+              </select>
+            </div>
             
             <div class="mb-3">
               <label for="expense-place" class="form-label">Place</label>
@@ -45,6 +52,27 @@
             
             <button type="submit" class="btn btn-primary w-100">Add Expense</button>
           </form>
+        </div>
+
+        <div class="expense-entry-card mt-4">
+          <h5 class="mb-3 fw-bold">Manage Categories</h5>
+          <form id="category-form" class="d-flex gap-2 mb-3">
+            <input type="text" class="form-control" id="category-name" placeholder="Add new category" required autocomplete="off" maxlength="30">
+            <button type="submit" class="btn btn-outline-primary">Add</button>
+          </form>
+          <div id="category-list" class="d-flex flex-wrap gap-2">
+            <span class="text-muted small">Loading categories...</span>
+          </div>
+        </div>
+
+        <div class="expense-entry-card mt-4">
+          <h5 class="mb-3 fw-bold">Category Split</h5>
+          <div class="position-relative">
+            <canvas id="category-chart"></canvas>
+            <div id="category-chart-empty" class="text-muted small text-center py-4 d-none">
+              No expenses available for selected scope.
+            </div>
+          </div>
         </div>
       </div>
       
@@ -103,8 +131,14 @@
         
         <!-- Expense List -->
         <div class="expense-list-card">
-          <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <h5 class="mb-0 fw-bold">Expense List</h5>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+              <select id="expense-list-category-filter" class="form-select form-select-sm" style="width: auto;">
+                <option value="all">All categories</option>
+              </select>
+              <input type="text" id="expense-list-search" class="form-control form-control-sm" placeholder="Search expenses..." style="width: 300px;" autocomplete="off">
+            </div>
           </div>
           <div class="table-responsive">
             <table class="table table-sm expense-table">
@@ -112,6 +146,7 @@
                 <tr>
                   <th>Date</th>
                   <th>Name</th>
+                  <th>Category</th>
                   <th>Amount</th>
                   <th>Place</th>
                   <th>Description</th>
@@ -120,10 +155,13 @@
               </thead>
               <tbody id="expense-list-body">
                 <tr>
-                  <td colspan="6" class="text-center text-muted">Loading expenses...</td>
+                  <td colspan="7" class="text-center text-muted">Loading expenses...</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="d-flex justify-content-start mt-2">
+            <div class="small text-muted ms-2">Total: <span id="expense-list-total" class="fw-semibold text-dark">₹0.00</span></div>
           </div>
         </div>
       </div>
@@ -152,6 +190,12 @@
             <div class="mb-3">
               <label for="edit-expense-date" class="form-label">Date</label>
               <input type="date" class="form-control" id="edit-expense-date" required>
+            </div>
+            <div class="mb-3">
+              <label for="edit-expense-category" class="form-label">Category <span class="text-danger">*</span></label>
+              <select class="form-select" id="edit-expense-category" required>
+                <option value="" selected disabled>Select category</option>
+              </select>
             </div>
             <div class="mb-3">
               <label for="edit-expense-place" class="form-label">Place</label>
