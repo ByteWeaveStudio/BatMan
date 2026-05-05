@@ -116,6 +116,14 @@ export function getPortfolioRef(year = null) {
 }
 
 /**
+ * Get database reference for user's growth tree
+ */
+export function getGrowthTreeRef(year = null) {
+  const yearRef = getUserYearRef(year);
+  return yearRef ? child(yearRef, 'growthTree') : null;
+}
+
+/**
  * Handle logout
  */
 export async function handleLogout() {
