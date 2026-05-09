@@ -39,6 +39,9 @@ export function initHeader() {
             <li class="nav-item">
               <a class="nav-link" href="knight-os.html">KnightOS</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="knight-os-mindmap.html">Mind Map</a>
+            </li>
           </ul>
           <div class="d-flex align-items-center gap-3">
             <div class="d-flex align-items-center gap-2">
