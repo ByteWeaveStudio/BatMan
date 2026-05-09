@@ -421,8 +421,10 @@ function updateSummary() {
   if (!totalSavingsEl || !closingBalanceEl) return;
 
   totalSavingsEl.textContent = formatSummaryAmount(totalSavings);
+  totalSavingsEl.classList.toggle('text-danger', totalSavings < 0);
   const closingBalance = (portfolioData.openingBalance || 0) + totalSavings;
   closingBalanceEl.textContent = formatSummaryAmount(closingBalance);
+  closingBalanceEl.classList.toggle('text-danger', closingBalance < 0);
 }
 
 function getYearTotals() {
@@ -488,7 +490,8 @@ function formatCurrency(amount) {
 }
 
 function formatSummaryAmount(amount) {
-  return '₹' + Math.abs(amount).toLocaleString('en-IN', {
+  const sign = amount < 0 ? '-' : '';
+  return sign + '₹' + Math.abs(amount).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });

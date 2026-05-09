@@ -1,12 +1,17 @@
 // Analytics page functionality (Modular Firebase v9+)
-import { getCurrentMonth, getCurrentYear, getYearMonth, getTasksRef } from './auth.js';
-import { child, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+import { getCurrentMonth, getCurrentYear, getYearMonth, getTasksRef, getWeightRef, getWeightTargetsRef } from './auth.js';
+import { child, get, set, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
 let currentMonth = getCurrentMonth();
 let currentYear = getCurrentYear();
 let dailyChart = null;
 let monthlyChart = null;
 let taskChart = null;
+let weightChart = null;
+let weightEntries = {};   // { 'YYYY-MM-DD': number }
+let weightTargets = {};   // { '1'..'12': number }
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * Initialize analytics page
@@ -17,7 +22,10 @@ export function initAnalytics() {
   
   // Initialize month selector
   initMonthSelector();
-  
+
+  // Wire up weight tracker controls
+  initWeightTracker();
+
   // Load and render charts
   loadAnalyticsData();
 }
@@ -52,9 +60,12 @@ function loadAnalyticsData() {
 
   // Load yearly completion heatmap
   loadYearlyCompletionHeatmap();
-  
+
   // Load task-wise completion data for selected month
   loadTaskWiseCompletionData();
+
+  // Load weight log for the year
+  loadWeightData();
 }
 
 /**
@@ -400,4 +411,320 @@ function renderTaskWiseChart(labels, data) {
       animation: false
     }
   });
+}
+
+/* ---------- Weight tracker ---------- */
+
+function initWeightTracker() {
+  const dateInput = document.getElementById('weightDate');
+  const valueInput = document.getElementById('weightValue');
+  const addBtn = document.getElementById('weightAddBtn');
+  if (!dateInput || !valueInput || !addBtn) return;
+
+  // Default the date picker to today (clamped to the selected year so adding
+  // a stray entry to a different year is hard to do by accident).
+  dateInput.value = defaultWeightDate();
+  // Restrict to entries within the currently selected year.
+  dateInput.min = `${currentYear}-01-01`;
+  dateInput.max = `${currentYear}-12-31`;
+
+  addBtn.addEventListener('click', handleAddWeight);
+  valueInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddWeight();
+    }
+  });
+
+  const targetsBtn = document.getElementById('weightTargetsBtn');
+  const saveTargetsBtn = document.getElementById('weightTargetsSaveBtn');
+  if (targetsBtn) {
+    targetsBtn.addEventListener('click', renderWeightTargetsModal);
+  }
+  if (saveTargetsBtn) {
+    saveTargetsBtn.addEventListener('click', handleSaveTargets);
+  }
+}
+
+function defaultWeightDate() {
+  const today = new Date();
+  if (today.getFullYear() === currentYear) {
+    return formatDateInput(today);
+  }
+  // For past/future years, default to Jan 1 of that year
+  return `${currentYear}-01-01`;
+}
+
+function formatDateInput(date) {
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${m}-${d}`;
+}
+
+async function loadWeightData() {
+  const weightRefRoot = getWeightRef();
+  const targetsRef = getWeightTargetsRef();
+  if (!weightRefRoot) return;
+  try {
+    const [weightSnap, targetsSnap] = await Promise.all([
+      get(weightRefRoot),
+      targetsRef ? get(targetsRef) : Promise.resolve(null)
+    ]);
+    weightEntries = weightSnap.exists() ? (weightSnap.val() || {}) : {};
+    weightTargets = (targetsSnap && targetsSnap.exists()) ? (targetsSnap.val() || {}) : {};
+    renderWeightChart();
+    renderWeightLatest();
+  } catch (err) {
+    console.error('Failed to load weight log:', err);
+  }
+}
+
+async function handleAddWeight() {
+  const dateInput = document.getElementById('weightDate');
+  const valueInput = document.getElementById('weightValue');
+  if (!dateInput || !valueInput) return;
+
+  const dateKey = dateInput.value;
+  const raw = parseFloat(valueInput.value);
+
+  if (!dateKey) {
+    alert('Please pick a date.');
+    return;
+  }
+  if (!dateKey.startsWith(`${currentYear}-`)) {
+    alert(`Date must be within ${currentYear}. Switch year in the header to log for another year.`);
+    return;
+  }
+  if (!Number.isFinite(raw) || raw <= 0) {
+    alert('Please enter a valid weight.');
+    valueInput.focus();
+    return;
+  }
+
+  const value = Math.round(raw * 10) / 10; // store 1 decimal place
+  const ref = getWeightRef();
+  if (!ref) return;
+
+  try {
+    await set(child(ref, dateKey), value);
+    weightEntries = { ...weightEntries, [dateKey]: value };
+    valueInput.value = '';
+    renderWeightChart();
+    renderWeightLatest();
+  } catch (err) {
+    console.error('Failed to save weight:', err);
+    alert('Could not save. Please try again.');
+  }
+}
+
+async function handleDeleteWeight(dateKey) {
+  const ref = getWeightRef();
+  if (!ref || !dateKey) return;
+  if (!confirm(`Delete weight entry for ${dateKey}?`)) return;
+  try {
+    await remove(child(ref, dateKey));
+    const next = { ...weightEntries };
+    delete next[dateKey];
+    weightEntries = next;
+    renderWeightChart();
+    renderWeightLatest();
+  } catch (err) {
+    console.error('Failed to delete weight:', err);
+    alert('Could not delete. Please try again.');
+  }
+}
+
+function renderWeightLatest() {
+  const el = document.getElementById('weightLatest');
+  if (!el) return;
+  const sorted = Object.keys(weightEntries).sort();
+  if (sorted.length === 0) {
+    el.textContent = '';
+    return;
+  }
+  const lastDate = sorted[sorted.length - 1];
+  const value = weightEntries[lastDate];
+  el.textContent = `Latest: ${value} kg on ${lastDate}`;
+}
+
+function renderWeightChart() {
+  const ctx = document.getElementById('weightChart');
+  const empty = document.getElementById('weightEmpty');
+  if (!ctx) return;
+
+  // Always span the full year regardless of whether data exists.
+  const allDates = generateYearDates(currentYear);
+  const hasAnyEntry = Object.keys(weightEntries).length > 0;
+  const hasAnyTarget = Object.keys(weightTargets).length > 0;
+  const hasAny = hasAnyEntry || hasAnyTarget;
+
+  ctx.classList.toggle('d-none', !hasAny);
+  if (empty) empty.classList.toggle('d-none', hasAny);
+
+  if (weightChart) {
+    weightChart.destroy();
+    weightChart = null;
+  }
+  if (!hasAny) return;
+
+  // Weight series: actual value or null per day (spanGaps stitches the line).
+  const weightSeries = allDates.map(d => (d in weightEntries) ? weightEntries[d] : null);
+
+  // Target series: month's target for every day in that month, or null if unset.
+  const targetSeries = allDates.map(d => {
+    const month = parseInt(d.slice(5, 7), 10);
+    const t = weightTargets[String(month)];
+    return (t === undefined || t === null || t === '') ? null : Number(t);
+  });
+
+  weightChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allDates,
+      datasets: [
+        {
+          label: 'Weight (kg)',
+          data: weightSeries,
+          backgroundColor: 'rgba(79, 70, 229, 0.15)',
+          borderColor: '#4f46e5',
+          borderWidth: 2,
+          pointRadius: (ctx) => ctx.parsed?.y == null ? 0 : 4,
+          pointHoverRadius: (ctx) => ctx.parsed?.y == null ? 0 : 6,
+          pointBackgroundColor: '#4f46e5',
+          tension: 0.25,
+          fill: true,
+          spanGaps: true
+        },
+        {
+          label: 'Target (kg)',
+          data: targetSeries,
+          borderColor: '#dc2626',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          spanGaps: false,
+          tension: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 4,
+      onClick: (event, elements) => {
+        const weightHit = elements.find(e => e.datasetIndex === 0);
+        if (!weightHit) return;
+        const dateKey = allDates[weightHit.index];
+        if (!(dateKey in weightEntries)) return;
+        handleDeleteWeight(dateKey);
+      },
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { boxWidth: 14, boxHeight: 2, padding: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].label,
+            label: (item) => {
+              if (item.parsed.y == null) return null;
+              if (item.datasetIndex === 0) return `Weight: ${item.parsed.y} kg  ·  click to delete`;
+              return `Target: ${item.parsed.y} kg`;
+            }
+          },
+          filter: (item) => item.parsed.y != null
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: 0,
+            callback: function(_value, index) {
+              const dateStr = allDates[index];
+              if (!dateStr) return '';
+              return dateStr.endsWith('-01') ? MONTH_SHORT[parseInt(dateStr.slice(5, 7), 10) - 1] : '';
+            }
+          },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: false,
+          ticks: { callback: (v) => `${v} kg` }
+        }
+      },
+      animation: false
+    }
+  });
+}
+
+function generateYearDates(year) {
+  const out = [];
+  const cur = new Date(year, 0, 1);
+  while (cur.getFullYear() === year) {
+    out.push(formatDateInput(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
+/* ---------- Targets modal ---------- */
+
+function renderWeightTargetsModal() {
+  const grid = document.getElementById('weightTargetsGrid');
+  if (!grid) return;
+  grid.innerHTML = MONTH_NAMES.map((name, i) => {
+    const monthNum = i + 1;
+    const value = weightTargets[String(monthNum)];
+    const valStr = (value === undefined || value === null || value === '') ? '' : String(value);
+    return `
+      <div class="col-6 col-md-4">
+        <label class="form-label small text-muted mb-1">${name}</label>
+        <div class="input-group input-group-sm">
+          <input type="number" step="0.1" min="0" class="form-control"
+                 data-target-month="${monthNum}" value="${valStr}" placeholder="--">
+          <span class="input-group-text">kg</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleSaveTargets() {
+  const grid = document.getElementById('weightTargetsGrid');
+  if (!grid) return;
+  const inputs = grid.querySelectorAll('[data-target-month]');
+  const next = {};
+  for (const input of inputs) {
+    const month = input.dataset.targetMonth;
+    const raw = input.value.trim();
+    if (raw === '') continue; // empty = no target for that month
+    const num = parseFloat(raw);
+    if (!Number.isFinite(num) || num <= 0) {
+      alert(`Invalid value for ${MONTH_NAMES[parseInt(month, 10) - 1]}.`);
+      input.focus();
+      return;
+    }
+    next[month] = Math.round(num * 10) / 10;
+  }
+
+  const ref = getWeightTargetsRef();
+  if (!ref) return;
+  try {
+    await set(ref, next);
+    weightTargets = next;
+    renderWeightChart();
+    const modalEl = document.getElementById('weightTargetsModal');
+    if (modalEl && window.bootstrap?.Modal) {
+      window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+    }
+  } catch (err) {
+    console.error('Failed to save targets:', err);
+    alert('Could not save targets. Please try again.');
+  }
 }

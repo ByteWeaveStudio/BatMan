@@ -124,6 +124,22 @@ export function getGrowthTreeRef(year = null) {
 }
 
 /**
+ * Get database reference for user's weight log (year-scoped, keyed YYYY-MM-DD)
+ */
+export function getWeightRef(year = null) {
+  const yearRef = getUserYearRef(year);
+  return yearRef ? child(yearRef, 'weight') : null;
+}
+
+/**
+ * Get database reference for user's monthly weight targets (year-scoped, keyed 1..12)
+ */
+export function getWeightTargetsRef(year = null) {
+  const yearRef = getUserYearRef(year);
+  return yearRef ? child(yearRef, 'weightTargets') : null;
+}
+
+/**
  * Handle logout
  */
 export async function handleLogout() {
