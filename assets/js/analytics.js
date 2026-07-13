@@ -169,10 +169,17 @@ function renderYearlyHeatmap(year, completionByDate) {
   const today = new Date();
   const isCurrentYear = today.getFullYear() === year;
 
+  // Clamped cell size; grid overflows and scrolls on narrow screens.
+  const gap = 3;
+  const availableWidth = container.clientWidth || 0;
+  const tentativeSize = (availableWidth - gap * (weeksCount - 1)) / weeksCount;
+  const cellSize = Math.max(10, Math.min(20, Math.floor(tentativeSize)));
+
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthsRow = document.createElement('div');
   monthsRow.className = 'heatmap-months';
-  monthsRow.style.gridTemplateColumns = `repeat(${weeksCount}, 1fr)`;
+  monthsRow.style.gridTemplateColumns = `repeat(${weeksCount}, ${cellSize}px)`;
+  monthsRow.style.width = 'max-content';
 
   for (let month = 0; month < 12; month++) {
     const firstOfMonth = new Date(year, month, 1);
@@ -188,12 +195,8 @@ function renderYearlyHeatmap(year, completionByDate) {
 
   const grid = document.createElement('div');
   grid.className = 'heatmap-grid';
-  grid.style.gridTemplateColumns = `repeat(${weeksCount}, 1fr)`;
-
-  const gap = 3;
-  const availableWidth = container.clientWidth || 0;
-  const tentativeSize = (availableWidth - gap * (weeksCount - 1)) / weeksCount;
-  const cellSize = Math.max(10, Math.min(20, Math.floor(tentativeSize)));
+  grid.style.gridTemplateColumns = `repeat(${weeksCount}, ${cellSize}px)`;
+  grid.style.width = 'max-content';
   grid.style.setProperty('--heatmap-cell-size', `${cellSize}px`);
   grid.style.setProperty('--heatmap-cell-gap', `${gap}px`);
 
@@ -612,7 +615,8 @@ function renderWeightChart() {
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      aspectRatio: 4,
+      // Taller on phones for readability.
+      aspectRatio: window.innerWidth < 576 ? 2 : 4,
       onClick: (event, elements) => {
         const weightHit = elements.find(e => e.datasetIndex === 0);
         if (!weightHit) return;

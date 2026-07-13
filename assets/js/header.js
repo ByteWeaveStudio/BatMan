@@ -15,48 +15,57 @@ export function initHeader() {
   header.innerHTML = `
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
       <div class="container-fluid">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="dashboard.html">
+        <button class="navbar-toggler me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#navbarOffcanvas" aria-controls="navbarOffcanvas" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2 me-auto me-lg-3" href="dashboard.html">
           <img src="./assets/img/favicon.png" alt="BatMan Logo" style="height: 32px; width: 32px;">
           BatMan
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="dashboard.html">Dashboard</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="analytics.html">Analytics</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="expenses.html">Expenses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="portfolio.html">Portfolio</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="knight-os.html">KnightOS</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="knight-os-mindmap.html">Mind Map</a>
-            </li>
-          </ul>
-          <div class="d-flex align-items-center gap-3">
-            <div class="d-flex align-items-center gap-2">
-              <label for="year-selector" class="mb-0 small text-muted">Year:</label>
-              <select id="year-selector" class="form-select form-select-sm" style="width: auto;">
-                ${generateYearOptions(currentYear)}
-              </select>
-            </div>
-            <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                ${currentUser ? currentUser.email : 'User'}
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#" id="logout-link">Logout</a></li>
-              </ul>
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="navbarOffcanvas" aria-labelledby="navbarOffcanvasLabel">
+          <div class="offcanvas-header border-bottom">
+            <span class="offcanvas-title fw-bold d-flex align-items-center gap-2" id="navbarOffcanvasLabel">
+              <img src="./assets/img/favicon.png" alt="BatMan Logo" style="height: 28px; width: 28px;">
+              BatMan
+            </span>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">Dashboard</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="analytics.html">Analytics</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="expenses.html">Expenses</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="portfolio.html">Portfolio</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="knight-os.html">KnightOS</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="knight-os-mindmap.html">Mind Map</a>
+              </li>
+            </ul>
+            <div class="d-flex align-items-center flex-wrap gap-3 mt-3 mt-lg-0">
+              <div class="d-flex align-items-center gap-2">
+                <label for="year-selector" class="mb-0 small text-muted">Year:</label>
+                <select id="year-selector" class="form-select form-select-sm" style="width: auto;">
+                  ${generateYearOptions(currentYear)}
+                </select>
+              </div>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  ${currentUser ? currentUser.email : 'User'}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" id="logout-link">Logout</a></li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>

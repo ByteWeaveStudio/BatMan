@@ -14,7 +14,8 @@ body {
 #app-header {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  /* Above offcanvas backdrop (1040), below modal backdrop (1050) */
+  z-index: 1045;
   background-color: white;
 }
 
@@ -96,7 +97,9 @@ body {
 .task-table {
   background: white;
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #dee2e6;
 }
 
@@ -232,6 +235,17 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 2px;
+}
+
+/* Horizontal scroll for wide analytics visuals */
+.heatmap-scroll,
+.chart-hscroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.weight-chart-inner {
+  width: 100%;
 }
 
 /* Utilities */
@@ -654,19 +668,29 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .task-table {
-    overflow-x: auto;
+
+/* Mobile navigation drawer (offcanvas) width */
+@media (max-width: 991.98px) {
+  #navbarOffcanvas.offcanvas {
+    width: min(80vw, 320px);
   }
-  
+}
+
+/* Tablet and below */
+@media (max-width: 768px) {
   .month-controls {
     flex-wrap: wrap;
   }
-  
+
+  .month-controls .form-select,
+  .month-controls .btn {
+    flex: 1 1 auto;
+  }
+
   #portfolio-table {
     font-size: 0.75rem;
   }
-  
+
   #portfolio-table th,
   #portfolio-table td {
     padding: 0.375rem 0.25rem;
@@ -678,6 +702,84 @@ body {
 
   .knight-card-detail {
     grid-column: span 2;
+  }
+}
+
+/* Phones */
+@media (max-width: 575.98px) {
+  /* Reclaim horizontal space on small screens */
+  .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .py-4 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Tighten card / panel padding so content isn't squeezed */
+  .expense-entry-card,
+  .expense-list-card,
+  .chart-container {
+    padding: 1rem;
+  }
+
+  .card-body.p-5 {
+    padding: 1.75rem !important;
+  }
+
+  /* Single-column KnightOS on the smallest screens */
+  .knight-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .knight-card-fixed,
+  .knight-card-detail {
+    grid-column: span 1;
+  }
+
+  .knight-card-body {
+    max-height: none;
+  }
+
+  /* Expense list filters: stack full width */
+  .expense-list-controls {
+    width: 100%;
+  }
+
+  .expense-list-controls > * {
+    flex: 1 1 100%;
+  }
+
+  #expense-list-search,
+  #expense-list-category-filter {
+    width: 100% !important;
+  }
+
+  /* Weight tracker quick-add: let inputs grow to fill the row */
+  #weightQuickAdd {
+    width: 100%;
+  }
+
+  #weightQuickAdd input[type="date"],
+  #weightQuickAdd input[type="number"] {
+    flex: 1 1 8rem;
+    width: auto !important;
+  }
+
+  #weightQuickAdd .btn {
+    flex: 1 1 auto;
+  }
+
+  .weight-chart-inner {
+    min-width: 640px;
+  }
+
+  /* Opening balance input can overflow at 1.5rem on tiny screens */
+  #opening-balance {
+    font-size: 1.25rem;
   }
 }
 
