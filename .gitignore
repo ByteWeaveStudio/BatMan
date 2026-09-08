@@ -1,1 +1,11 @@
-*.DS_Store
+node_modules/
+dist/
+dev-dist/
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# Security rules are managed in the Firebase console, not published here.
+database.rules.json

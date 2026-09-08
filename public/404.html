@@ -1,0 +1,8 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>BatMan</title>
+<script>
+  // Static hosts without rewrites land here; hand the path back to the SPA.
+  sessionStorage.setItem('batman.redirect', location.pathname + location.search + location.hash);
+  location.replace('/');
+</script>
