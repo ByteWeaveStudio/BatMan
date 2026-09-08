@@ -1,5 +1,5 @@
-import { Suspense, lazy, useEffect, type ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Suspense, lazy, type ReactNode } from 'react';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { YearProvider } from './context/YearContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -23,8 +23,7 @@ export function App() {
         <YearProvider>
           <ToastProvider>
             <ConfirmProvider>
-              <BrowserRouter>
-                <DeepLinkRestore />
+              <BrowserRouter basename={import.meta.env.BASE_URL}>
                 <Routes>
                   <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
                   <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
@@ -65,18 +64,6 @@ export function App() {
   );
 }
 
-/** public/404.html parks the requested path here for hosts without rewrites. */
-function DeepLinkRestore() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    const target = sessionStorage.getItem('batman.redirect');
-    if (!target) return;
-    sessionStorage.removeItem('batman.redirect');
-    if (target.startsWith('/') && !target.startsWith('//')) navigate(target, { replace: true });
-  }, [navigate]);
-  return null;
-}
-
 function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<Spinner large />}>{children}</Suspense>;
 }
@@ -113,9 +100,9 @@ function NotFound() {
       <div className="stack" style={{ alignItems: 'center', textAlign: 'center' }}>
         <h1>Page not found</h1>
         <p className="text-muted">That page doesn’t exist in BatMan.</p>
-        <a className="btn btn--primary" href="/">
+        <Link className="btn btn--primary" to="/">
           Back to dashboard
-        </a>
+        </Link>
       </div>
     </div>
   );

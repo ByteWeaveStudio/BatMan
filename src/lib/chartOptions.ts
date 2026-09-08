@@ -12,10 +12,10 @@ export function baseOptions(theme: ChartTheme): ChartOptions {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: theme.mode === 'dark' ? '#1b2539' : '#101623',
+        backgroundColor: theme.mode === 'dark' ? '#212126' : '#14130f',
         titleColor: '#ffffff',
-        bodyColor: theme.mode === 'dark' ? '#cbd3e2' : '#e8ecf4',
-        borderColor: theme.mode === 'dark' ? '#33405c' : 'transparent',
+        bodyColor: theme.mode === 'dark' ? '#d4d4d8' : '#ededf0',
+        borderColor: theme.mode === 'dark' ? '#3a3a42' : 'transparent',
         borderWidth: theme.mode === 'dark' ? 1 : 0,
         padding: 10,
         cornerRadius: 8,

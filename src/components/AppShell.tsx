@@ -34,7 +34,7 @@ export function AppShell() {
     <div className="shell">
       <aside className="rail">
         <div className="rail__brand">
-          <BatMark size={26} />
+          <BatMark size={28} />
           <span className="rail__wordmark">BatMan</span>
         </div>
         <nav className="rail__nav" aria-label="Main">
@@ -84,7 +84,7 @@ function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar__brand">
-        <BatMark size={22} />
+        <BatMark size={24} />
         <span className="topbar__wordmark">BatMan</span>
       </div>
       <div className="topbar__year">

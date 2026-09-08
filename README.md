@@ -59,17 +59,54 @@ test mode is readable by any signed-in user. `.gitignore` already excludes
 `firebase deploy --only database` (add a `"database"` block back to
 `firebase.json` first).
 
-### Deploying
+### Deploying to GitHub Pages
+
+`.github/workflows/deploy.yml` builds and publishes on every push to `main`.
+One-time setup:
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. **Firebase console → Authentication → Settings → Authorised domains**: add
+   `<your-user>.github.io`, or Google sign-in fails with
+   `auth/unauthorized-domain`.
+3. Push to `main`. The site lands at `https://<your-user>.github.io/<repo>/`.
+
+The base path is the part that usually breaks. A project site is served from
+`/<repo>/`, so the workflow passes `VITE_BASE` and that single value drives the
+asset URLs, the router `basename`, the web-manifest `scope`/`start_url` and the
+service-worker registration scope. It resolves itself:
+
+| Situation | Base |
+|---|---|
+| Project site (`user.github.io/repo`) | `/<repo>/` |
+| User site (repo named `user.github.io`) | `/` |
+| Custom domain (a `public/CNAME` file exists) | `/` |
+
+Local `npm run build` uses `/`, so dev and preview are unaffected.
+
+Pages has no rewrite rules, so the build writes `dist/404.html` as a byte copy of
+`index.html` — a deep link or refresh serves the app and React Router reads the
+real URL. It also writes `.nojekyll`, without which Pages runs Jekyll and drops
+files beginning with `_`.
+
+**Using a custom domain:** add `public/CNAME` containing the bare hostname, set
+it under Settings → Pages, and add that host to Firebase's authorised domains.
+The workflow switches the base to `/` automatically.
+
+**Pointing at your own Firebase project:** add the `VITE_FIREBASE_*` values as
+repository secrets and pass them through in the workflow's `Build` step under
+`env:`. Blank values fall back to the bundled defaults, so a half-configured set
+won't break the build.
+
+### Deploying to Firebase Hosting instead
 
 ```bash
 npm run build
 firebase deploy --only hosting
 ```
 
-`firebase.json` covers hosting only. It maps every route to `index.html` (including the old v1
-`*.html` URLs) so deep links and refreshes work. For Netlify or Cloudflare Pages,
-`public/_redirects` does the same; `public/404.html` covers hosts like GitHub
-Pages that support neither.
+`firebase.json` covers hosting only, and maps every route to `index.html`
+(including the old v1 `*.html` URLs). For Netlify or Cloudflare Pages,
+`public/_redirects` does the same.
 
 ---
 
@@ -116,10 +153,19 @@ src/
 semantic tokens (`--surface`, `--text-muted`, `--accent`) and never raw hex, so
 the light and dark themes are one file apart.
 
-Chart colours in `src/lib/chartTheme.ts` and the category palette in
-`src/lib/color.ts` were checked with a colour-vision validator against both
-surfaces — lightness band, chroma floor, adjacent-pair CVD separation,
-normal-vision separation and contrast. Re-run that check if you change them.
+The brand is black and bat-signal gold. One constraint is easy to break by
+accident: **bright gold only clears 1.6:1 on white**, so light mode splits the
+hue into two steps — `--accent` (`#b8860b`, 3.25:1) for fills, focus rings and
+active states, and `--accent-text` (`#a16207`, 4.92:1) for anything that is
+actually text. Dark mode runs on a near-black surface where the full gold clears
+11:1, so one step does both. Anything sitting *on* a gold fill uses
+`--on-accent`, never white.
+
+Chart colours in `src/lib/chartTheme.ts`, the pillar tokens and the category
+palette in `src/lib/color.ts` were checked with a colour-vision validator against
+both surfaces (`#ffffff` / `#141416`) — lightness band, chroma floor, CVD
+separation, normal-vision separation and contrast. Re-run that check if you
+change them.
 
 ### Responsive behaviour
 

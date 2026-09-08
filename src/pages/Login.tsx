@@ -62,7 +62,7 @@ export function Login() {
       <div className="auth__panel">
         <div className="auth__brand">
           <span className="auth__mark">
-            <BatMark size={32} />
+            <BatMark size={36} />
           </span>
           <div>
             <h1 className="auth__title">BatMan</h1>

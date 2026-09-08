@@ -49,7 +49,7 @@
 
 .btn--accent {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-xs);
 }
 
@@ -331,7 +331,7 @@
 }
 
 .check--accent:checked::after {
-  background: #fff;
+  background: var(--on-accent);
 }
 
 .check--lg {

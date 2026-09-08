@@ -2,19 +2,22 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 
-/* Vite env vars win when present, so the repo can be deployed against another project. */
+/* Vite env vars win when present, so the repo can be deployed against another
+   project. Blank values (an unset CI secret) fall through to the default. */
 const env = import.meta.env;
+const pick = (value: string | undefined, fallback: string) => (value?.trim() ? value.trim() : fallback);
 
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY ?? 'AIzaSyA7GbPDFEPDKqOrRa-0I0_Pk7dhfWyGkXY',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN ?? 'batman-bf259.firebaseapp.com',
-  databaseURL:
-    env.VITE_FIREBASE_DATABASE_URL ??
+  apiKey: pick(env.VITE_FIREBASE_API_KEY, 'AIzaSyA7GbPDFEPDKqOrRa-0I0_Pk7dhfWyGkXY'),
+  authDomain: pick(env.VITE_FIREBASE_AUTH_DOMAIN, 'batman-bf259.firebaseapp.com'),
+  databaseURL: pick(
+    env.VITE_FIREBASE_DATABASE_URL,
     'https://batman-bf259-default-rtdb.asia-southeast1.firebasedatabase.app',
-  projectId: env.VITE_FIREBASE_PROJECT_ID ?? 'batman-bf259',
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET ?? 'batman-bf259.firebasestorage.app',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '786158701900',
-  appId: env.VITE_FIREBASE_APP_ID ?? '1:786158701900:web:518e3698d655a3808c93e9',
+  ),
+  projectId: pick(env.VITE_FIREBASE_PROJECT_ID, 'batman-bf259'),
+  storageBucket: pick(env.VITE_FIREBASE_STORAGE_BUCKET, 'batman-bf259.firebasestorage.app'),
+  messagingSenderId: pick(env.VITE_FIREBASE_MESSAGING_SENDER_ID, '786158701900'),
+  appId: pick(env.VITE_FIREBASE_APP_ID, '1:786158701900:web:518e3698d655a3808c93e9'),
 };
 
 export const app = initializeApp(firebaseConfig);

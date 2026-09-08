@@ -42,7 +42,7 @@ function contrast(a: [number, number, number], b: [number, number, number]): num
 
 const SURFACE: Record<'light' | 'dark', [number, number, number]> = {
   light: [255, 255, 255],
-  dark: [18, 26, 43],
+  dark: [20, 20, 22],
 };
 
 /**
@@ -52,7 +52,7 @@ const SURFACE: Record<'light' | 'dark', [number, number, number]> = {
  */
 export function readableColor(hex: string, mode: 'light' | 'dark'): string {
   const rgb = parseHex(hex);
-  if (!rgb) return mode === 'dark' ? '#7c83f2' : '#4f46e5';
+  if (!rgb) return mode === 'dark' ? '#f5c518' : '#b8860b';
   const surface = SURFACE[mode];
   let current = rgb;
   for (let i = 0; i < 24 && contrast(current, surface) < 3; i++) {

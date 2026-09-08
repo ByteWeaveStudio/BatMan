@@ -2,7 +2,7 @@
  * Chart colour system.
  *
  * Categorical slots and the sequential ramp were checked with the data-viz
- * validator against both surfaces (#ffffff light, #121a2b dark):
+ * validator against both surfaces (#ffffff light, #141416 dark):
  *   categorical  all-pairs — light PASS, dark PASS (one 6–8 CVD warn pair,
  *                covered by the always-present text labels)
  *   sequential   single hue, monotone lightness, >=0.06 step gaps
@@ -28,32 +28,32 @@ export interface ChartTheme {
 
 const LIGHT: ChartTheme = {
   mode: 'light',
-  text: '#101623',
-  muted: '#5c6675',
-  subtle: '#8b94a3',
-  grid: '#eceef2',
+  text: '#14130f',
+  muted: '#5f5c54',
+  subtle: '#8c887e',
+  grid: '#efeeea',
   surface: '#ffffff',
-  border: '#e6e8ec',
-  series: ['#4f46e5', '#d97706', '#0d9488', '#e11d48'],
-  seriesWash: 'rgba(79, 70, 229, 0.10)',
-  reference: '#8b94a3',
-  ramp: ['#eef0fe', '#c7c9fa', '#9a9cf3', '#6b68ea', '#4338ca'],
-  noData: '#f1f2f5',
+  border: '#e8e6e1',
+  series: ['#b8860b', '#0d9488', '#e11d48', '#6366f1'],
+  seriesWash: 'rgba(184, 134, 11, 0.12)',
+  reference: '#8c887e',
+  ramp: ['#fdf3d7', '#f6dc95', '#e5bc4a', '#c69208', '#8a6208'],
+  noData: '#f2f1ed',
 };
 
 const DARK: ChartTheme = {
   mode: 'dark',
-  text: '#e8ecf4',
-  muted: '#98a3b8',
-  subtle: '#6d798f',
-  grid: '#1e2942',
-  surface: '#121a2b',
-  border: '#232e45',
-  series: ['#7c83f2', '#c98500', '#12ab9c', '#f4536e'],
-  seriesWash: 'rgba(124, 131, 242, 0.14)',
-  reference: '#6d798f',
-  ramp: ['#1a2340', '#2b3670', '#414ca8', '#5a63d4', '#8f95f5'],
-  noData: '#151d30',
+  text: '#ededf0',
+  muted: '#a1a1aa',
+  subtle: '#71717a',
+  grid: '#202024',
+  surface: '#141416',
+  border: '#26262b',
+  series: ['#bf8600', '#12ab9c', '#f4536e', '#7c83f2'],
+  seriesWash: 'rgba(191, 134, 0, 0.16)',
+  reference: '#71717a',
+  ramp: ['#241d07', '#463809', '#78600d', '#b08c11', '#f5c518'],
+  noData: '#17171a',
 };
 
 export function chartTheme(mode: 'light' | 'dark'): ChartTheme {

@@ -1,16 +1,25 @@
-/* Wordmark glyph. Inherits currentColor so it works in both themes. */
+import batmark from '../assets/batmark.png';
+
+/*
+ * The mark is the favicon artwork used as a CSS mask, so the header, the browser
+ * tab and the installed app icon are all the same bat. Painting it with
+ * currentColor keeps it themeable the way an inline SVG would.
+ */
+
+/** Tight bounding box of the artwork — 256x142. */
+const ASPECT = 256 / 142;
+
 export function BatMark({ size = 24 }: { size?: number }) {
   return (
-    <svg
-      viewBox="0 0 64 40"
-      width={size}
-      height={(size * 40) / 64}
-      fill="currentColor"
+    <span
+      className="batmark"
+      style={{
+        width: size,
+        height: Math.round(size / ASPECT),
+        maskImage: `url(${batmark})`,
+        WebkitMaskImage: `url(${batmark})`,
+      }}
       aria-hidden="true"
-      focusable="false"
-      style={{ flex: 'none' }}
-    >
-      <path d="M32 39c-2.6-7-5.4-11.4-8.4-13.3-3.4-2.2-6.6-.7-8.6 3.9-3.3-3.3-5.2-7-5.5-11.2C5.6 18.6 3.6 22 4 27.2 1.3 24 0 20.6 0 16.9 0 8.5 7.7 1.4 17.1 1c-3.2 1.9-4.5 4.1-3.7 6.6.9 3 4.9 5.5 10.4 6.3 3.3.5 4.9.1 5.3-1.4.3-1.1.6-2.4.9-3.7.5-2.3 1.8-4.1 3.9-5.5-1 2.4-1.2 4.3-.6 5.7 1.8-.9 3.6-.9 5.4 0 .6-1.4.4-3.3-.6-5.7 2.1 1.4 3.4 3.2 3.9 5.5.3 1.3.6 2.6.9 3.7.4 1.5 2 1.9 5.3 1.4 5.5-.8 9.5-3.3 10.4-6.3.8-2.5-.5-4.7-3.7-6.6C56.3 1.4 64 8.5 64 16.9c0 3.7-1.3 7.1-4 10.3.4-5.2-1.6-8.6-5.5-8.8-.3 4.2-2.2 7.9-5.5 11.2-2-4.6-5.2-6.1-8.6-3.9C37.4 27.6 34.6 32 32 39Z" />
-    </svg>
+    />
   );
 }
