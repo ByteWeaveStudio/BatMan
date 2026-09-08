@@ -460,6 +460,12 @@
   background: #0a0a0b;
   color: #f5c518;
   box-shadow: var(--shadow-md);
+  transition: transform var(--dur-base) var(--ease);
+}
+
+a.auth__mark:hover {
+  transform: scale(1.04);
+  text-decoration: none;
 }
 
 .auth__title {

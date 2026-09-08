@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/ui.css';
 import './styles/shell.css';
+import './styles/landing.css';
 import './styles/dashboard.css';
 import './styles/analytics.css';
 import './styles/expenses.css';

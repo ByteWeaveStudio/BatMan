@@ -61,9 +61,9 @@ export function Login() {
     <div className="auth">
       <div className="auth__panel">
         <div className="auth__brand">
-          <span className="auth__mark">
+          <Link className="auth__mark" to="/" aria-label="BatMan home">
             <BatMark size={36} />
-          </span>
+          </Link>
           <div>
             <h1 className="auth__title">BatMan</h1>
             <p className="auth__tagline">Goals, habits, money and growth — one year-scoped workspace.</p>

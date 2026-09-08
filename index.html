@@ -3,8 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>BatMan — Life Operating System</title>
-    <meta name="description" content="Goals, habits, expenses, portfolio and growth tracking in one year-scoped workspace." />
+
+    <title>BatMan — goals, habits, money and growth, one year at a time</title>
+    <meta
+      name="description"
+      content="A year-scoped personal operating system. Track yearly, quarterly and monthly goals, a daily habit grid, expenses, a 12-month financial sheet and a four-pillar growth map — free, private, and installable on any device."
+    />
+    <link rel="canonical" href="__SITE_URL__" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="application-name" content="BatMan" />
+    <meta name="author" content="Shubham Bisht" />
+
+    <!-- Link previews -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BatMan" />
+    <meta property="og:url" content="__SITE_URL__" />
+    <meta property="og:title" content="BatMan — goals, habits, money and growth, one year at a time" />
+    <meta
+      property="og:description"
+      content="A year-scoped personal operating system: goals that archive themselves, a daily habit grid, expense tracking, a 12-month financial sheet and a four-pillar growth map."
+    />
+    <meta property="og:image" content="__SITE_URL__og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The BatMan bat mark in gold on black, above the words 'a personal operating system'." />
+    <meta property="og:locale" content="en" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BatMan — goals, habits, money and growth, one year at a time" />
+    <meta
+      name="twitter:description"
+      content="A year-scoped personal operating system: goals, habits, expenses, a 12-month financial sheet and a four-pillar growth map."
+    />
+    <meta name="twitter:image" content="__SITE_URL__og.jpg" />
+
     <link rel="icon" type="image/png" href="%BASE_URL%favicon.png" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f7f5" />
@@ -13,6 +44,49 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="BatMan" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "__SITE_URL__#website",
+            "url": "__SITE_URL__",
+            "name": "BatMan",
+            "description": "A year-scoped personal operating system for goals, habits, expenses, savings and long-term growth.",
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "__SITE_URL__#app",
+            "name": "BatMan",
+            "url": "__SITE_URL__",
+            "applicationCategory": "ProductivityApplication",
+            "operatingSystem": "Any modern web browser; installable as a PWA on iOS, Android, macOS and Windows",
+            "description": "Track yearly, quarterly and monthly goals that archive themselves, a daily habit grid with a year heatmap, categorised expenses, a 12-month income and expense sheet backed by dated line items, and a four-pillar growth tree viewable as a radial mind map. Everything is scoped to a single year and syncs live across devices.",
+            "image": "__SITE_URL__og.jpg",
+            "featureList": [
+              "Yearly, quarterly and monthly goals with automatic period archiving",
+              "Daily habit grid with per-habit consistency scores and a year heatmap",
+              "Expense tracking with custom categories and month or year scope",
+              "Twelve-month income and expense sheet with dated line items",
+              "Four-pillar growth tree with a pan and zoom radial mind map",
+              "Weight tracking against monthly targets",
+              "Light and dark themes, installable as a PWA, live sync across devices"
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "isAccessibleForFree": true
+          }
+        ]
+      }
+    </script>
+
     <script>
       // Applied before paint so the first frame is already in the right theme.
       (function () {
@@ -29,6 +103,55 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!--
+      The app is client-rendered, so a crawler that does not execute JavaScript
+      sees an empty root. This mirrors the landing page in plain markup so the
+      product is legible to those crawlers and to anyone browsing without JS.
+      Keep it in step with the landing copy — it must not say anything the
+      rendered page doesn't.
+    -->
+    <noscript>
+      <style>
+        .ns { max-width: 44rem; margin: 0 auto; padding: 3rem 1.25rem; font-family: system-ui, sans-serif; line-height: 1.6; }
+        .ns h1 { font-size: 1.9rem; letter-spacing: -0.02em; }
+        .ns h2 { margin-top: 2rem; font-size: 1.15rem; }
+        .ns p, .ns li { color: #444; }
+        .ns a { color: #a16207; }
+      </style>
+      <main class="ns">
+        <h1>BatMan — goals, habits, money and growth, one year at a time</h1>
+        <p>
+          BatMan is a year-scoped personal operating system. Pick a year and the whole app follows it:
+          goals, habits, spending, savings and long-term growth. It is free, private to your account,
+          works on phone and desktop, and installs to your home screen.
+        </p>
+
+        <h2>What it does</h2>
+        <ul>
+          <li><strong>Goals and habits.</strong> Yearly, quarterly and monthly goals that archive themselves when the period rolls over, plus a grid of every habit against every day of the month.</li>
+          <li><strong>Analytics.</strong> Completion by month, consistency per habit, a heatmap of the whole year, and weight tracking against a target you set for each month.</li>
+          <li><strong>Expenses.</strong> Log spending against your own categories and see where a month or a year actually went, ranked.</li>
+          <li><strong>Portfolio.</strong> A twelve-month income and expense sheet where every figure opens into its own list of dated line items.</li>
+          <li><strong>Growth.</strong> Health, relationships, finance and career, each broken into areas, topics and tasks, readable as a tree or a radial mind map.</li>
+        </ul>
+
+        <h2>How it works</h2>
+        <p>
+          Everything is scoped to a single year, so last year stays exactly as you left it and this
+          year starts clean. Changes sync live across every device you are signed in on. Every path
+          in the database is locked to your account — there is no tracking, no advertising and no
+          third-party analytics.
+        </p>
+
+        <h2>Get started</h2>
+        <p>
+          <a href="__SITE_URL__register">Create an account</a> or
+          <a href="__SITE_URL__login">sign in</a>. This page needs JavaScript to run the app itself.
+        </p>
+      </main>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

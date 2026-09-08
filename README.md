@@ -18,6 +18,15 @@ Installable as a PWA, with light and dark themes.
 | **Portfolio** | A 12-month income/expense sheet. Every figure is a list of dated line items. Full table on desktop, expandable month cards on phones. |
 | **Growth** | Four pillars → areas → topics → tasks. A column drill-down (**Tree**) and a pan/zoom radial **Mind map** over the same data, with progress rolling up at every level. |
 
+`/` serves a public landing page to signed-out visitors and the dashboard to
+signed-in ones, so the marketing page and the app share a root URL and the PWA
+`start_url` stays `/`. Every other route redirects to sign-in when signed out.
+
+The landing page's product shots (`src/pages/landing/Mockups.tsx`) are built from
+live DOM against the real design tokens rather than captured as images — crisp at
+any DPI, no bytes to ship, and they can't drift out of date. Swap in real captures
+if you'd rather.
+
 Everything is scoped by the year picked in the header, and every screen is
 live — edits sync across open devices without a refresh.
 
@@ -96,6 +105,42 @@ The workflow switches the base to `/` automatically.
 repository secrets and pass them through in the workflow's `Build` step under
 `env:`. Blank values fall back to the bundled defaults, so a half-configured set
 won't break the build.
+
+### SEO and AI crawlers
+
+The build emits three files alongside the app, all generated from the resolved
+site URL so they can never point at the wrong host:
+
+| File | What it is |
+|---|---|
+| `robots.txt` | Allows general crawlers, disallows the signed-in routes (they render an empty shell), and names the AI crawlers explicitly. |
+| `sitemap.xml` | The three public URLs, with `lastmod` stamped at build time. |
+| `llms.txt` | An [llmstxt.org](https://llmstxt.org) summary — plain markdown describing the product, how it's built and where the public pages are. |
+
+`index.html` carries a canonical link, Open Graph and Twitter card tags, a
+1200×630 share image (`public/og.jpg`), and JSON-LD for `WebSite` and
+`SoftwareApplication`.
+
+**AI crawlers are allowed by default** so the product is discoverable and
+citable. To opt out, flip `ALLOW_AI` to `false` in `vite.config.ts` — every
+named agent switches to `Disallow: /`. Note that `Google-Extended` and
+`Applebot-Extended` don't crawl at all; they only govern whether already-crawled
+content may be used for AI training.
+
+> **Caveat on a GitHub project site.** Crawlers only read `robots.txt` from the
+> domain root — `https://<user>.github.io/robots.txt` — which belongs to your
+> root user repo, not this one. The generated file lands at
+> `/<repo>/robots.txt` and will be ignored until you either move to a custom
+> domain or copy its rules into the root repo. The `<meta name="robots">` tag,
+> the sitemap and `llms.txt` all work regardless; submit the sitemap directly in
+> Search Console.
+
+> **Caveat on client rendering.** This is a client-rendered SPA, so a crawler
+> that doesn't execute JavaScript sees an empty root. Googlebot renders JS; most
+> AI crawlers currently do not. The `<noscript>` block in `index.html` mirrors
+> the landing copy in plain markup (~290 words) so those crawlers get the real
+> content. Prerendering the landing route to static HTML would be the stronger
+> fix if organic search matters.
 
 ### Deploying to Firebase Hosting instead
 

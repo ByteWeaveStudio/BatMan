@@ -65,9 +65,9 @@ export function Register() {
     <div className="auth">
       <div className="auth__panel">
         <div className="auth__brand">
-          <span className="auth__mark">
+          <Link className="auth__mark" to="/" aria-label="BatMan home">
             <BatMark size={36} />
-          </span>
+          </Link>
           <div>
             <h1 className="auth__title">Create your account</h1>
             <p className="auth__tagline">Your data is private to you and scoped by year.</p>

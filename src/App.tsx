@@ -15,6 +15,7 @@ const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default:
 const Expenses = lazy(() => import('./pages/Expenses').then((m) => ({ default: m.Expenses })));
 const Portfolio = lazy(() => import('./pages/Portfolio').then((m) => ({ default: m.Portfolio })));
 const Growth = lazy(() => import('./pages/Growth').then((m) => ({ default: m.Growth })));
+const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })));
 
 export function App() {
   return (
@@ -27,13 +28,7 @@ export function App() {
                 <Routes>
                   <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
                   <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
-                  <Route
-                    element={
-                      <RequireAuth>
-                        <AppShell />
-                      </RequireAuth>
-                    }
-                  >
+                  <Route element={<AuthedLayout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="analytics" element={<Lazy><Analytics /></Lazy>} />
                     <Route path="expenses" element={<Lazy><Expenses /></Lazy>} />
@@ -68,12 +63,25 @@ function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<Spinner large />}>{children}</Suspense>;
 }
 
-function RequireAuth({ children }: { children: ReactNode }) {
+/**
+ * Signed in, this is the app shell. Signed out, the root shows the public
+ * landing page and every other route bounces to sign-in.
+ */
+function AuthedLayout() {
   const { user, ready } = useAuth();
   const location = useLocation();
   if (!ready) return <BootScreen />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  return <>{children}</>;
+  if (!user) {
+    if (location.pathname === '/') {
+      return (
+        <Lazy>
+          <Landing />
+        </Lazy>
+      );
+    }
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+  return <AppShell />;
 }
 
 function GuestOnly({ children }: { children: ReactNode }) {

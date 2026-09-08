@@ -30,20 +30,28 @@ jobs:
 
       # A project site is served from /<repo>/. A user site or a custom domain
       # is served from the root, and must not carry the prefix.
-      - name: Resolve base path
-        id: base
+      - name: Resolve base path and canonical URL
+        id: site
         run: |
           repo='${{ github.event.repository.name }}'
           owner='${{ github.repository_owner }}'
-          if [ -f public/CNAME ] || [ "$repo" = "$owner.github.io" ]; then
-            echo "value=/" >> "$GITHUB_OUTPUT"
+          owner_lc=$(echo "$owner" | tr '[:upper:]' '[:lower:]')
+          if [ -f public/CNAME ]; then
+            host=$(head -n1 public/CNAME | tr -d '[:space:]')
+            base='/'; url="https://$host/"
+          elif [ "$repo" = "$owner_lc.github.io" ]; then
+            base='/'; url="https://$owner_lc.github.io/"
           else
-            echo "value=/$repo/" >> "$GITHUB_OUTPUT"
+            base="/$repo/"; url="https://$owner_lc.github.io/$repo/"
           fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "url=$url"  >> "$GITHUB_OUTPUT"
+          echo "Building for $url (base $base)"
 
       - name: Build
         env:
-          VITE_BASE: ${{ steps.base.outputs.value }}
+          VITE_BASE: ${{ steps.site.outputs.base }}
+          VITE_SITE_URL: ${{ steps.site.outputs.url }}
         run: npm run build
 
       - uses: actions/configure-pages@v5
